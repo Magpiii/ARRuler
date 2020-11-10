@@ -13,6 +13,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     //Init array of SCNNode objects:
     var dotNodes = [SCNNode]()
+    var textNode = SCNNode()
 
     @IBOutlet var sceneView: ARSCNView!
     
@@ -55,6 +56,15 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     //Method for when the user touches the screen:
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         print("Touch detected.")
+        
+        //Remove previous dots if there are already 2 dots on the screen:
+        if (dotNodes.count >= 2) {
+            for dot in dotNodes {
+                dot.removeFromParentNode()
+            }
+            //Re-initialize the dotNodes array as empty:
+            dotNodes = [SCNNode]()
+        }
         
         /*Grabs the location of the first touch (no need to worry about multitouch for this app):
         */
@@ -114,10 +124,14 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         print(abs(distance))
         
-        updateText(text: "\(abs(distance))")
+        //Update the text and adds it at the position of the endpoint:
+        updateText(text: "\(abs(distance))", atPosition: end.position)
     }
     
-    func updateText(text: String) {
+    func updateText(text: String, atPosition position: SCNVector3) {
+        //Remove the previous textNode if there is one:
+        textNode.removeFromParentNode()
+        
         //Init geometry of text in AR and node:
         let textGeometry = SCNText(string: text, extrusionDepth: 1.0)
         let textNode = SCNNode(geometry: textGeometry)
@@ -126,8 +140,14 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         */
         textGeometry.firstMaterial?.diffuse.contents = UIColor.red
         
-        //Set position of the text to a reasonable distance in front of the user:
-        textNode.position = SCNVector3(x: 0, y: 0.01, z: -0.1)
+        //Set position of the text to the position of the passed in position:
+        textNode.position = SCNVector3(x: position.x, y: (position.y + 0.01), z: position.z)
+        
+        //Set scale of text in AR:
+        textNode.scale = SCNVector3(x: 0.01, y: 0.01, z: 0.01)
+        
+        //Add textNode to scene:
+        sceneView.scene.rootNode.addChildNode(textNode)
     }
 
     // MARK: - ARSCNViewDelegate
